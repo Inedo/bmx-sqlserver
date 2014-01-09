@@ -1,6 +1,7 @@
 using System;
 using System.Data.SqlClient;
 using System.Text;
+using Inedo.BuildMaster;
 using Inedo.BuildMaster.Extensibility.Agents;
 using Inedo.BuildMaster.Extensibility.Providers;
 using Inedo.BuildMaster.Extensibility.Providers.Database;
@@ -20,7 +21,7 @@ namespace Inedo.BuildMasterExtensions.SqlServer
         public SqlServerDatabaseProvider()
         {
             this.remoteId = new Lazy<Guid>(
-                () => this.Agent.GetService<IRemoteMethodExecuter>().InvokeFunc(RemoteSqlProvider.CreateInstance, this.ConnectionString)
+                () => (this.Agent ?? Util.Agents.CreateLocalAgent()).GetService<IRemoteMethodExecuter>().InvokeFunc(RemoteSqlProvider.CreateInstance, this.ConnectionString)
             );
         }
 
@@ -30,7 +31,7 @@ namespace Inedo.BuildMasterExtensions.SqlServer
         }
         private IRemoteMethodExecuter Remote
         {
-            get { return this.Agent.GetService<IRemoteMethodExecuter>(); }
+            get { return (this.Agent ?? Util.Agents.CreateLocalAgent()).GetService<IRemoteMethodExecuter>(); }
         }
 
         public void InitializeDatabase()
@@ -132,7 +133,7 @@ namespace Inedo.BuildMasterExtensions.SqlServer
             if (disposing && !this.disposed)
             {
                 if (this.remoteId.IsValueCreated)
-                    this.Agent.GetService<IRemoteMethodExecuter>().InvokeAction(RemoteSqlProvider.Dispose, this.remoteId.Value);
+                    (this.Agent ?? Util.Agents.CreateLocalAgent()).GetService<IRemoteMethodExecuter>().InvokeAction(RemoteSqlProvider.Dispose, this.remoteId.Value);
 
                 this.disposed = true;
             }
